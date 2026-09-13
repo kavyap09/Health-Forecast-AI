@@ -393,7 +393,7 @@ def delete_user(
 @router.get("/api/admin/datasets")
 def get_admin_datasets(
     current_user: dict = Depends(
-        require_roles("System Administrator")
+        require_roles("System Administrator","Healthcare Researcher")
     )
 ):
     datasets = list(datasets_collection.find())

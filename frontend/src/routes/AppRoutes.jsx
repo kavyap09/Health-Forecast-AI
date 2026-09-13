@@ -23,7 +23,12 @@ import FollowUpPlanning from "../pages/FollowUpPlanning";
 
 import HospitalDashboard from "../pages/HospitalDashboard";
 import DepartmentPerformance from "../pages/DepartmentPerformance";
+
 import ResearchDashboard from "../pages/ResearchDashboard";
+import PopulationHealth from "../pages/PopulationHealth";
+import ReadmissionTrends from "../pages/ReadmissionTrends";
+import ClinicalOutcomes from "../pages/ClinicalOutcomes";
+
 import SystemAdminDashboard from "../pages/SystemAdminDashboard";
 import AuditLogs from "../pages/AuditLogs";
 
@@ -137,10 +142,7 @@ function AppRoutes() {
           path="/department-performance"
           element={<DepartmentPerformance />}
         />
-      <Route
-          path="/operatinal-reports"
-          element={<OperationalReports />}
-        />
+
       </Route>
 
 
@@ -161,6 +163,47 @@ function AppRoutes() {
         <Route
           path="/research-dashboard"
           element={<ResearchDashboard />}
+        />
+
+        <Route
+          path="/population-health"
+          element={<PopulationHealth />}
+        />
+
+        <Route
+          path="/readmission-trends"
+          element={<ReadmissionTrends />}
+        />
+
+        <Route
+          path="/clinical-outcomes"
+          element={<ClinicalOutcomes />}
+        />
+
+      </Route>
+
+
+      {/* =====================================================
+          DATASET PAGE
+          SYSTEM ADMIN + HEALTHCARE RESEARCHER
+          
+          SAME AdminDatasets PAGE
+      ===================================================== */}
+
+      <Route
+        element={
+          <ProtectedRoute
+            allowedRoles={[
+              "System Administrator",
+              "Healthcare Researcher",
+            ]}
+          />
+        }
+      >
+
+        <Route
+          path="/admin/datasets"
+          element={<AdminDatasets />}
         />
 
       </Route>
@@ -188,11 +231,6 @@ function AppRoutes() {
         <Route
           path="/admin/users"
           element={<AdminUsers />}
-        />
-
-        <Route
-          path="/admin/datasets"
-          element={<AdminDatasets />}
         />
 
         <Route
@@ -235,7 +273,6 @@ function AppRoutes() {
           element={<Analytics />}
         />
 
-        {/* Existing Patient Outcome Reports */}
         <Route
           path="/reports"
           element={<Reports />}
@@ -271,7 +308,7 @@ function AppRoutes() {
       {/* =====================================================
           EXPORT ANALYTICS
           HOSPITAL ADMIN + SYSTEM ADMIN
-          
+
           KEEPING THIS FEATURE INTACT
       ===================================================== */}
 

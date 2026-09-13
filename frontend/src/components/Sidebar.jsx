@@ -91,7 +91,7 @@ function Sidebar() {
     },
 
     {
-      name: "Patient outcome Reports",
+      name: "Patient Outcome Reports",
       path: "/operational-reports",
       icon: <FaFileMedical />,
     },
@@ -175,45 +175,27 @@ function Sidebar() {
     },
 
     {
-      name: "Population Analytics",
-      path: "/research/analytics",
-      icon: <FaChartBar />,
-    },
-
-    {
-      name: "Readmission Trends",
-      path: "/research/readmission-trends",
-      icon: <FaChartLine />,
-    },
-
-    {
-      name: "Treatment Effectiveness",
-      path: "/research/treatment-effectiveness",
-      icon: <FaPills />,
-    },
-
-    {
-      name: "Research Dataset",
-      path: "/research/dataset",
-      icon: <FaDatabase />,
-    },
-
-    {
       name: "Population Health",
-      path: "/research/population-health",
+      path: "/population-health",
       icon: <FaFlask />,
     },
 
     {
-      name: "Analytical Reports",
-      path: "/research/reports",
-      icon: <FaFileMedical />,
+      name: "Readmission Trends",
+      path: "/readmission-trends",
+      icon: <FaChartLine />,
     },
 
     {
-      name: "Export Dataset",
-      path: "/research/dataset/export",
-      icon: <FaDownload />,
+      name: "Clinical Outcomes",
+      path: "/clinical-outcomes",
+      icon: <FaHeartbeat />,
+    },
+
+    {
+      name: "Research Dataset",
+      path: "/admin/datasets",
+      icon: <FaDatabase />,
     },
 
     {
