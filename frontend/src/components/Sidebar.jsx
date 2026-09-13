@@ -67,7 +67,7 @@ function Sidebar() {
     },
 
     {
-      name: "Treatment Effectiveness",
+      name: "Treatment Management",
       path: "/treatment",
       icon: <FaPills />,
     },
