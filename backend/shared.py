@@ -103,6 +103,7 @@ class RegisterUser(BaseModel):
     email: EmailStr
     password: str
     role: str
+    department: str | None = None
 
 
 class LoginUser(BaseModel):

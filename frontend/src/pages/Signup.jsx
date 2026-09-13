@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { FaUserMd, FaCheckCircle } from "react-icons/fa";
+import {
+  FaUserMd,
+  FaCheckCircle,
+  FaEye,
+  FaEyeSlash,
+} from "react-icons/fa";
 
 function Signup() {
   const navigate = useNavigate();
@@ -12,7 +17,11 @@ function Signup() {
     password: "",
     confirmPassword: "",
     role: "Doctor",
+    department: "",
   });
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -24,7 +33,6 @@ function Signup() {
       [e.target.name]: e.target.value,
     });
 
-    // Clear messages when user starts editing
     setError("");
     setSuccess("");
   };
@@ -46,6 +54,12 @@ function Signup() {
       return;
     }
 
+    // Department validation for Doctor
+    if (formData.role === "Doctor" && !formData.department) {
+      setError("Please select a department.");
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -56,15 +70,17 @@ function Signup() {
           email: formData.email,
           password: formData.password,
           role: formData.role,
+          department:
+            formData.role === "Doctor"
+              ? formData.department
+              : null,
         }
       );
 
-      // Show success message
       setSuccess(
         "Account created successfully! Redirecting to login..."
       );
 
-      // Redirect after 1.5 seconds
       setTimeout(() => {
         navigate("/login");
       }, 1500);
@@ -114,7 +130,6 @@ function Signup() {
 
         </div>
 
-
         {/* =========================
             Form
         ========================= */}
@@ -136,7 +151,6 @@ function Signup() {
             className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
 
-
           {/* Email */}
 
           <input
@@ -149,32 +163,81 @@ function Signup() {
             className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
 
-
           {/* Password */}
 
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          <div className="relative">
 
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+              className="w-full border border-gray-300 rounded-lg p-3 pr-11 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+
+            <button
+              type="button"
+              onClick={() =>
+                setShowPassword(!showPassword)
+              }
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600"
+              aria-label={
+                showPassword
+                  ? "Hide password"
+                  : "Show password"
+              }
+            >
+              {showPassword ? (
+                <FaEyeSlash />
+              ) : (
+                <FaEye />
+              )}
+            </button>
+
+          </div>
 
           {/* Confirm Password */}
 
-          <input
-            type="password"
-            name="confirmPassword"
-            placeholder="Confirm Password"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            required
-            className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          <div className="relative">
 
+            <input
+              type={
+                showConfirmPassword
+                  ? "text"
+                  : "password"
+              }
+              name="confirmPassword"
+              placeholder="Confirm Password"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              required
+              className="w-full border border-gray-300 rounded-lg p-3 pr-11 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+
+            <button
+              type="button"
+              onClick={() =>
+                setShowConfirmPassword(
+                  !showConfirmPassword
+                )
+              }
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600"
+              aria-label={
+                showConfirmPassword
+                  ? "Hide confirm password"
+                  : "Show confirm password"
+              }
+            >
+              {showConfirmPassword ? (
+                <FaEyeSlash />
+              ) : (
+                <FaEye />
+              )}
+            </button>
+
+          </div>
 
           {/* Role */}
 
@@ -199,10 +262,49 @@ function Signup() {
 
           </select>
 
+          {/* Department */}
 
-          {/* =========================
-              Error Message
-          ========================= */}
+          {formData.role === "Doctor" && (
+            <select
+              name="department"
+              value={formData.department}
+              onChange={handleChange}
+              required
+              className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+
+              <option value="">
+                Select Department
+              </option>
+
+              <option value="Cardiology">
+                Cardiology
+              </option>
+
+              <option value="Neurology">
+                Neurology
+              </option>
+
+              <option value="General Medicine">
+                General Medicine
+              </option>
+
+              <option value="Orthopedics">
+                Orthopedics
+              </option>
+
+              <option value="Pediatrics">
+                Pediatrics
+              </option>
+
+              <option value="Oncology">
+                Oncology
+              </option>
+
+            </select>
+          )}
+
+          {/* Error Message */}
 
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm text-center">
@@ -210,10 +312,7 @@ function Signup() {
             </div>
           )}
 
-
-          {/* =========================
-              Success Message
-          ========================= */}
+          {/* Success Message */}
 
           {success && (
             <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-lg text-sm flex items-center justify-center gap-2 text-center">
@@ -227,10 +326,7 @@ function Signup() {
             </div>
           )}
 
-
-          {/* =========================
-              Button
-          ========================= */}
+          {/* Button */}
 
           <button
             type="submit"
@@ -246,10 +342,7 @@ function Signup() {
 
         </form>
 
-
-        {/* =========================
-            Login
-        ========================= */}
+        {/* Login */}
 
         <p className="text-center text-gray-500 mt-6">
 

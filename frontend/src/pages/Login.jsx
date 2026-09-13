@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaUserMd, FaShieldAlt } from "react-icons/fa";
+import {
+  FaUserMd,
+  FaShieldAlt,
+  FaEye,
+  FaEyeSlash,
+} from "react-icons/fa";
 import api from "../services/api";
 
 function Login() {
@@ -13,6 +18,7 @@ function Login() {
   });
 
   const [isSystemAdmin, setIsSystemAdmin] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -71,9 +77,13 @@ function Login() {
         navigate("/admin");
       } else if (userRole === "Doctor") {
         navigate("/dashboard");
-      } else if (userRole === "Hospital Administrator") {
+      } else if (
+        userRole === "Hospital Administrator"
+      ) {
         navigate("/hospital-dashboard");
-      } else if (userRole === "Healthcare Researcher") {
+      } else if (
+        userRole === "Healthcare Researcher"
+      ) {
         navigate("/research-dashboard");
       } else {
         navigate("/dashboard");
@@ -97,6 +107,8 @@ function Login() {
 
       <div className="bg-white w-[420px] rounded-2xl shadow-2xl p-8">
 
+        {/* Header */}
+
         <div className="flex flex-col items-center mb-6">
 
           <div
@@ -106,11 +118,13 @@ function Login() {
                 : "bg-blue-600"
             } text-white p-4 rounded-full`}
           >
+
             {isSystemAdmin ? (
               <FaShieldAlt size={35} />
             ) : (
               <FaUserMd size={35} />
             )}
+
           </div>
 
           <h2 className="text-3xl font-bold mt-4 text-slate-800">
@@ -128,6 +142,8 @@ function Login() {
           className="space-y-5"
         >
 
+          {/* Email */}
+
           <input
             type="email"
             name="email"
@@ -142,15 +158,46 @@ function Login() {
             className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
 
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          {/* Password */}
+
+          <div className="relative">
+
+            <input
+              type={
+                showPassword
+                  ? "text"
+                  : "password"
+              }
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+              className="w-full border border-gray-300 rounded-lg p-3 pr-11 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+
+            <button
+              type="button"
+              onClick={() =>
+                setShowPassword(!showPassword)
+              }
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600"
+              aria-label={
+                showPassword
+                  ? "Hide password"
+                  : "Show password"
+              }
+            >
+              {showPassword ? (
+                <FaEyeSlash />
+              ) : (
+                <FaEye />
+              )}
+            </button>
+
+          </div>
+
+          {/* Role */}
 
           {!isSystemAdmin && (
             <select
@@ -159,6 +206,7 @@ function Login() {
               onChange={handleChange}
               className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
+
               <option value="Doctor">
                 Doctor
               </option>
@@ -170,13 +218,16 @@ function Login() {
               <option value="Healthcare Researcher">
                 Healthcare Researcher
               </option>
+
             </select>
           )}
 
           {/* System Administrator Toggle */}
+
           <div className="flex items-center justify-between border border-gray-200 rounded-lg p-3 bg-gray-50">
 
             <div>
+
               <p className="text-sm font-semibold text-gray-700">
                 System Administrator Access
               </p>
@@ -184,6 +235,7 @@ function Login() {
               <p className="text-xs text-gray-500 mt-1">
                 Use configured administrator credentials
               </p>
+
             </div>
 
             <button
@@ -196,6 +248,7 @@ function Login() {
               }`}
               aria-label="Toggle System Administrator Access"
             >
+
               <span
                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
                   isSystemAdmin
@@ -203,24 +256,38 @@ function Login() {
                     : "translate-x-1"
                 }`}
               />
+
             </button>
 
           </div>
 
+          {/* System Administrator Information */}
+
           {isSystemAdmin && (
             <div className="text-xs text-slate-600 bg-slate-100 border border-slate-200 rounded-lg p-3">
-              <strong>System Administrator Mode</strong>
+
+              <strong>
+                System Administrator Mode
+              </strong>
+
               <br />
-              Login using the System Administrator credentials
-              configured in the backend environment.
+
+              Login using the System Administrator
+              credentials configured in the backend
+              environment.
+
             </div>
           )}
+
+          {/* Error */}
 
           {error && (
             <p className="text-red-500 text-sm text-center">
               {error}
             </p>
           )}
+
+          {/* Login Button */}
 
           <button
             type="submit"
@@ -231,15 +298,20 @@ function Login() {
                 : "bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300"
             } text-white py-3 rounded-lg font-semibold transition duration-300`}
           >
+
             {loading
               ? "Logging in..."
               : isSystemAdmin
-                ? "Login as System Administrator"
-                : "Login"}
+              ? "Login as System Administrator"
+              : "Login"}
+
           </button>
+
+          {/* Signup */}
 
           {!isSystemAdmin && (
             <p className="text-center text-gray-500 mt-6">
+
               Don't have an account?{" "}
 
               <button
@@ -249,6 +321,7 @@ function Login() {
               >
                 Sign Up
               </button>
+
             </p>
           )}
 

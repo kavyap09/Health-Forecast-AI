@@ -49,6 +49,10 @@ def register_user(
         "Healthcare Researcher",
     }
 
+    # -----------------------------------------------------
+    # Validate role
+    # -----------------------------------------------------
+
     if user.role not in allowed_registration_roles:
 
         raise HTTPException(
@@ -59,6 +63,10 @@ def register_user(
             ),
         )
 
+    # -----------------------------------------------------
+    # Prevent System Admin email registration
+    # -----------------------------------------------------
+
     if is_system_admin_email(str(user.email)):
 
         raise HTTPException(
@@ -68,6 +76,28 @@ def register_user(
                 "System Administrator."
             ),
         )
+
+    # -----------------------------------------------------
+    # Department validation
+    # -----------------------------------------------------
+
+    if user.role == "Doctor" and not user.department:
+
+        raise HTTPException(
+            status_code=400,
+            detail="Department is required for Doctor accounts.",
+        )
+
+    # Department should only be stored for Doctors
+    department = (
+        user.department
+        if user.role == "Doctor"
+        else None
+    )
+
+    # -----------------------------------------------------
+    # Check existing account
+    # -----------------------------------------------------
 
     existing_user = users_collection.find_one(
         {
@@ -82,16 +112,25 @@ def register_user(
             detail="An account with this email already exists.",
         )
 
+    # -----------------------------------------------------
+    # Hash password
+    # -----------------------------------------------------
+
     hashed_password = bcrypt.hashpw(
         user.password.encode("utf-8"),
         bcrypt.gensalt(),
     )
+
+    # -----------------------------------------------------
+    # Create user document
+    # -----------------------------------------------------
 
     user_data = {
         "name": user.name,
         "email": str(user.email).lower(),
         "password": hashed_password.decode("utf-8"),
         "role": user.role,
+        "department": department,
         "created_at": datetime.now(timezone.utc),
     }
 
@@ -117,9 +156,9 @@ def login_user(
 
     email = str(user.email).lower()
 
-    # -----------------------------------------------------
+    # =====================================================
     # SYSTEM ADMIN
-    # -----------------------------------------------------
+    # =====================================================
 
     if email == SYSTEM_ADMIN_EMAIL.lower():
 
@@ -152,12 +191,13 @@ def login_user(
                 "name": "System Administrator",
                 "email": SYSTEM_ADMIN_EMAIL,
                 "role": "System Administrator",
+                "department": None,
             },
         }
 
-    # -----------------------------------------------------
+    # =====================================================
     # NORMAL USER
-    # -----------------------------------------------------
+    # =====================================================
 
     existing_user = users_collection.find_one(
         {
@@ -171,6 +211,10 @@ def login_user(
             status_code=401,
             detail="Invalid email or password.",
         )
+
+    # -----------------------------------------------------
+    # Verify password
+    # -----------------------------------------------------
 
     try:
 
@@ -193,6 +237,10 @@ def login_user(
             detail="Invalid email or password.",
         )
 
+    # -----------------------------------------------------
+    # Create JWT
+    # -----------------------------------------------------
+
     token = jwt.encode(
         {
             "user_id": str(existing_user["_id"]),
@@ -207,6 +255,10 @@ def login_user(
         algorithm=JWT_ALGORITHM,
     )
 
+    # -----------------------------------------------------
+    # Return login response
+    # -----------------------------------------------------
+
     return {
         "message": "Login successful",
         "token": token,
@@ -215,5 +267,6 @@ def login_user(
             "name": existing_user["name"],
             "email": existing_user["email"],
             "role": existing_user["role"],
+            "department": existing_user.get("department"),
         },
     }
