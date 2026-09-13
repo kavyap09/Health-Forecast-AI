@@ -28,62 +28,63 @@ function Sidebar() {
   );
 
   const role = user?.role;
-  // --------------------------------------------------
-// DOCTOR MENU
-// --------------------------------------------------
 
-const doctorMenus = [
-  {
-    name: "Dashboard",
-    path: "/dashboard",
-    icon: <FaChartPie />,
-  },
-  {
-    name: "My Patients",
-    path: "/patients",
-    icon: <FaUserInjured />,
-  },
-  {
-    name: "Risk Prediction",
-    path: "/risk-prediction",
-    icon: <FaHeartbeat />,
-  },
-  {
-    name: "Re-admission",
-    path: "/readmission",
-    icon: <FaHospital />,
-  },
-  {
-    name: "Treatment Effectiveness",
-    path: "/treatment",
-    icon: <FaPills />,
-  },
-  {
-    name: "Care Recommendations",
-    path: "/care-recommendations",
-    icon: <FaHeartbeat />,
-  },
-  {
-    name: "Follow-up Planning",
-    path: "/follow-up-planning",
-    icon: <FaClipboardList />,
-  },
-  {
-    name: "Analytics",
-    path: "/analytics",
-    icon: <FaChartBar />,
-  },
-  {
-    name: "Patient Outcome Reports",
-    path: "/reports",
-    icon: <FaFileMedical />,
-  },
-  {
-    name: "Profile",
-    path: "/profile",
-    icon: <FaUserCircle />,
-  },
-];
+  // --------------------------------------------------
+  // DOCTOR MENU
+  // --------------------------------------------------
+
+  const doctorMenus = [
+    {
+      name: "Dashboard",
+      path: "/dashboard",
+      icon: <FaChartPie />,
+    },
+    {
+      name: "My Patients",
+      path: "/patients",
+      icon: <FaUserInjured />,
+    },
+    {
+      name: "Risk Prediction",
+      path: "/risk-prediction",
+      icon: <FaHeartbeat />,
+    },
+    {
+      name: "Re-admission",
+      path: "/readmission",
+      icon: <FaHospital />,
+    },
+    {
+      name: "Treatment Effectiveness",
+      path: "/treatment",
+      icon: <FaPills />,
+    },
+    {
+      name: "Care Recommendations",
+      path: "/care-recommendations",
+      icon: <FaHeartbeat />,
+    },
+    {
+      name: "Follow-up Planning",
+      path: "/follow-up-planning",
+      icon: <FaClipboardList />,
+    },
+    {
+      name: "Analytics",
+      path: "/analytics",
+      icon: <FaChartBar />,
+    },
+    {
+      name: "Patient Outcome Reports",
+      path: "/reports",
+      icon: <FaFileMedical />,
+    },
+    {
+      name: "Profile",
+      path: "/profile",
+      icon: <FaUserCircle />,
+    },
+  ];
 
   // --------------------------------------------------
   // HOSPITAL ADMINISTRATOR MENU
@@ -189,62 +190,58 @@ const doctorMenus = [
     },
   ];
 
-// --------------------------------------------------
-// SYSTEM ADMINISTRATOR MENU
-// --------------------------------------------------
+  // --------------------------------------------------
+  // SYSTEM ADMINISTRATOR MENU
+  // --------------------------------------------------
 
-const systemAdminMenus = [
-  {
-    name: "System Dashboard",
-    path: "/admin",
-    icon: <FaChartPie />,
-  },
-  {
-    name: "All Patients",
-    path: "/patients",
-    icon: <FaUserInjured />,
-  },
-  {
-    name: "Hospital Analytics",
-    path: "/analytics",
-    icon: <FaChartBar />,
-  },
-  {
-    name: "Reports",
-    path: "/export",
-    icon: <FaFileMedical />,
-  },
-  {
-    name: "Users & Roles",
-    path: "/admin/users",
-    icon: <FaUsers />,
-  },
-  {
-    name: "Datasets",
-    path: "/admin/datasets",
-    icon: <FaDatabase />,
-  },
-  {
-    name: "AI Model",
-    path: "/readmission",
-    icon: <FaRobot />,
-  },
-  {
-    name: "Audit Logs",
-    path: "/admin/audit-logs",
-    icon: <FaClipboardList />,
-  },
-  {
-    name: "System Settings",
-    path: "/admin/settings",
-    icon: <FaCog />,
-  },
-  {
-    name: "Profile",
-    path: "/profile",
-    icon: <FaUserCircle />,
-  },
-];
+  const systemAdminMenus = [
+    {
+      name: "System Dashboard",
+      path: "/admin",
+      icon: <FaChartPie />,
+    },
+    {
+      name: "All Patients",
+      path: "/patients",
+      icon: <FaUserInjured />,
+    },
+    {
+      name: "Hospital Analytics",
+      path: "/analytics",
+      icon: <FaChartBar />,
+    },
+    {
+      name: "Reports",
+      path: "/export",
+      icon: <FaFileMedical />,
+    },
+    {
+      name: "Users & Roles",
+      path: "/admin/users",
+      icon: <FaUsers />,
+    },
+    {
+      name: "Datasets",
+      path: "/admin/datasets",
+      icon: <FaDatabase />,
+    },
+    {
+      name: "AI Model",
+      path: "/readmission",
+      icon: <FaRobot />,
+    },
+    {
+      name: "Audit Logs",
+      path: "/admin/audit-logs",
+      icon: <FaClipboardList />,
+    },
+    {
+      name: "Profile",
+      path: "/profile",
+      icon: <FaUserCircle />,
+    },
+  ];
+
   // --------------------------------------------------
   // SELECT MENU BASED ON ROLE
   // --------------------------------------------------
@@ -285,6 +282,7 @@ const systemAdminMenus = [
           <li key={menu.name}>
             <NavLink
               to={menu.path}
+              end={menu.path === "/admin"}
               className={({ isActive }) =>
                 `flex items-center gap-4 p-4 rounded-xl transition ${
                   isActive
@@ -303,6 +301,7 @@ const systemAdminMenus = [
         ))}
 
         {/* Logout */}
+
         <li>
           <button
             type="button"

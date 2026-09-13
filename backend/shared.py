@@ -127,6 +127,7 @@ class CreateAdminUser(BaseModel):
     email: EmailStr
     password: str
     role: str
+    department: str | None = None
 
 
 class UpdateRole(BaseModel):

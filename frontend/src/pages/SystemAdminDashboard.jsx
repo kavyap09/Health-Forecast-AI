@@ -33,16 +33,16 @@ function SystemAdminDashboard() {
           api.get("/api/admin/audit-logs"),
         ]);
 
-        setUsers(usersResponse.data);
-        setDatasets(datasetsResponse.data);
+        setUsers(usersResponse.data.users || []);
+        setDatasets(datasetsResponse.data.datasets || []);
         setModel(modelResponse.data);
-        setAuditLogs(logsResponse.data);
+        setAuditLogs(logsResponse.data.logs || []);
       } catch (err) {
         console.error(err);
 
         setError(
           err.response?.data?.detail ||
-          "Unable to load system administration data."
+            "Unable to load system administration data."
         );
       } finally {
         setLoading(false);
@@ -55,7 +55,6 @@ function SystemAdminDashboard() {
   return (
     <DashboardLayout>
       <div className="p-6">
-
         <div className="mb-8">
           <div className="flex items-center gap-3">
             <FaShieldAlt className="text-slate-700 text-3xl" />
@@ -83,7 +82,6 @@ function SystemAdminDashboard() {
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-
               <div className="bg-white rounded-xl shadow p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -149,13 +147,10 @@ function SystemAdminDashboard() {
                   <FaClipboardList className="text-orange-500 text-3xl" />
                 </div>
               </div>
-
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-
               <div className="bg-white rounded-xl shadow p-6">
-
                 <h2 className="text-xl font-semibold text-slate-800 mb-5">
                   User Roles
                 </h2>
@@ -166,7 +161,6 @@ function SystemAdminDashboard() {
                   "Healthcare Researcher",
                   "System Administrator",
                 ].map((role) => {
-
                   const count = users.filter(
                     (user) => user.role === role
                   ).length;
@@ -181,17 +175,14 @@ function SystemAdminDashboard() {
                     </div>
                   );
                 })}
-
               </div>
 
               <div className="bg-white rounded-xl shadow p-6">
-
                 <h2 className="text-xl font-semibold text-slate-800 mb-5">
                   AI Model Information
                 </h2>
 
                 <div className="space-y-3 text-gray-600">
-
                   <p>
                     <strong>Status:</strong>{" "}
                     {model?.model_loaded
@@ -208,15 +199,11 @@ function SystemAdminDashboard() {
                     <strong>Features:</strong>{" "}
                     {model?.features?.length ?? 0}
                   </p>
-
                 </div>
-
               </div>
-
             </div>
 
             <div className="bg-white rounded-xl shadow p-6 mt-8">
-
               <h2 className="text-xl font-semibold text-slate-800 mb-5">
                 Recent Platform Activity
               </h2>
@@ -226,7 +213,7 @@ function SystemAdminDashboard() {
                   No audit activity available.
                 </p>
               ) : (
-                auditLogs.slice(0, 8).map((log, index) => (
+                auditLogs.slice(0, 6).map((log, index) => (
                   <div
                     key={log._id || index}
                     className="flex justify-between gap-4 py-3 border-b"
@@ -247,12 +234,9 @@ function SystemAdminDashboard() {
                   </div>
                 ))
               )}
-
             </div>
-
           </>
         )}
-
       </div>
     </DashboardLayout>
   );

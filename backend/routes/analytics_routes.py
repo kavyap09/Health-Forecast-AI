@@ -9,6 +9,7 @@ from auth import require_roles
 
 from shared import (
     patients_collection,
+    users_collection,
     create_audit_log,
 )
 
@@ -26,6 +27,7 @@ from reportlab.lib.enums import TA_CENTER
 
 
 router = APIRouter()
+
 
 # =========================================================
 # HOSPITAL READMISSION STATISTICS
@@ -56,15 +58,6 @@ def hospital_readmission_statistics(
 
     # -----------------------------------------------------
     # ACTUAL READMISSION DATA
-    # -----------------------------------------------------
-    #
-    # Patient records may contain:
-    #   readmitted
-    #   readmission
-    #   readmission_30_days
-    #
-    # We check the stored readmission information instead
-    # of treating the AI risk level as actual readmission.
     # -----------------------------------------------------
 
     readmitted_patients = 0
@@ -171,6 +164,7 @@ def hospital_readmission_statistics(
     # -----------------------------------------------------
 
     if total_admissions > 0:
+
         readmission_rate = round(
             (
                 readmitted_patients
@@ -179,7 +173,9 @@ def hospital_readmission_statistics(
             * 100,
             2,
         )
+
     else:
+
         readmission_rate = 0.0
 
     # -----------------------------------------------------
@@ -267,6 +263,7 @@ def hospital_readmission_statistics(
         ),
     }
 
+
 # =========================================================
 # HOSPITAL ANALYTICS
 # =========================================================
@@ -284,6 +281,10 @@ def hospital_analytics(
 
     role = current_user["role"]
 
+    # -----------------------------------------------------
+    # DOCTOR
+    # -----------------------------------------------------
+
     if role == "Doctor":
 
         patients = list(
@@ -294,6 +295,10 @@ def hospital_analytics(
             )
         )
 
+    # -----------------------------------------------------
+    # HOSPITAL ADMIN + SYSTEM ADMIN
+    # -----------------------------------------------------
+
     else:
 
         patients = list(
@@ -302,29 +307,49 @@ def hospital_analytics(
 
     total_patients = len(patients)
 
+    # -----------------------------------------------------
+    # RISK COUNTS
+    # -----------------------------------------------------
+
     high_risk = sum(
         1
         for patient in patients
         if str(
-            patient.get("risk", "")
-        ).upper() == "HIGH"
+            patient.get(
+                "risk",
+                "",
+            )
+        ).upper()
+        == "HIGH"
     )
 
     medium_risk = sum(
         1
         for patient in patients
         if str(
-            patient.get("risk", "")
-        ).upper() == "MEDIUM"
+            patient.get(
+                "risk",
+                "",
+            )
+        ).upper()
+        == "MEDIUM"
     )
 
     low_risk = sum(
         1
         for patient in patients
         if str(
-            patient.get("risk", "")
-        ).upper() == "LOW"
+            patient.get(
+                "risk",
+                "",
+            )
+        ).upper()
+        == "LOW"
     )
+
+    # -----------------------------------------------------
+    # STATUS DISTRIBUTION
+    # -----------------------------------------------------
 
     status_counts = {}
 
@@ -336,8 +361,16 @@ def hospital_analytics(
         )
 
         status_counts[status] = (
-            status_counts.get(status, 0) + 1
+            status_counts.get(
+                status,
+                0,
+            )
+            + 1
         )
+
+    # -----------------------------------------------------
+    # RESPONSE
+    # -----------------------------------------------------
 
     return {
         "total_patients": total_patients,
@@ -345,6 +378,383 @@ def hospital_analytics(
         "medium_risk": medium_risk,
         "low_risk": low_risk,
         "status_distribution": status_counts,
+    }
+
+
+# =========================================================
+# DEPARTMENT PERFORMANCE
+# HOSPITAL ADMIN + SYSTEM ADMIN
+# =========================================================
+
+@router.get("/api/analytics/department-performance")
+def department_performance(
+    current_user: dict = Depends(
+        require_roles(
+            "Hospital Administrator",
+            "System Administrator",
+        )
+    ),
+):
+    """
+    Department-wise hospital performance.
+
+    Statistics are calculated from:
+
+    1. Real Doctor accounts
+    2. Their stored departments
+    3. Real patients assigned to those doctors
+
+    No dummy department or patient data is created.
+    """
+
+    # -----------------------------------------------------
+    # GET ALL DOCTORS
+    # -----------------------------------------------------
+
+    doctors = list(
+        users_collection.find(
+            {
+                "role": "Doctor"
+            }
+        )
+    )
+
+    # -----------------------------------------------------
+    # MAP DOCTOR ID TO DOCTOR INFORMATION
+    # -----------------------------------------------------
+
+    doctor_map = {}
+
+    for doctor in doctors:
+
+        doctor_id = str(
+            doctor["_id"]
+        )
+
+        doctor_map[doctor_id] = {
+            "name": doctor.get(
+                "name",
+                "Unknown Doctor",
+            ),
+            "email": doctor.get(
+                "email",
+                "N/A",
+            ),
+            "department": doctor.get(
+                "department"
+            ),
+        }
+
+    # -----------------------------------------------------
+    # GET ALL PATIENTS
+    # -----------------------------------------------------
+
+    patients = list(
+        patients_collection.find()
+    )
+
+    # -----------------------------------------------------
+    # INITIALIZE DEPARTMENT DATA
+    # -----------------------------------------------------
+
+    departments = {}
+
+    # -----------------------------------------------------
+    # PROCESS DOCTORS
+    # -----------------------------------------------------
+
+    for doctor in doctors:
+
+        doctor_id = str(
+            doctor["_id"]
+        )
+
+        department = doctor.get(
+            "department"
+        )
+
+        if not department:
+            department = "Department Not Assigned"
+
+        if department not in departments:
+
+            departments[department] = {
+                "department": department,
+                "doctor_count": 0,
+                "patient_count": 0,
+                "high_risk": 0,
+                "medium_risk": 0,
+                "low_risk": 0,
+                "readmitted_patients": 0,
+                "treatment_plans": 0,
+                "follow_ups": 0,
+                "doctors": [],
+            }
+
+        departments[department]["doctor_count"] += 1
+
+        departments[department]["doctors"].append(
+            {
+                "id": doctor_id,
+                "name": doctor.get(
+                    "name",
+                    "Unknown Doctor",
+                ),
+                "email": doctor.get(
+                    "email",
+                    "N/A",
+                ),
+            }
+        )
+
+    # -----------------------------------------------------
+    # PROCESS PATIENTS
+    # -----------------------------------------------------
+
+    for patient in patients:
+
+        doctor_id = patient.get(
+            "doctor_id"
+        )
+
+        # -------------------------------------------------
+        # DETERMINE DEPARTMENT
+        # -------------------------------------------------
+
+        if not doctor_id:
+
+            department = "Department Not Assigned"
+
+        else:
+
+            doctor_info = doctor_map.get(
+                str(doctor_id)
+            )
+
+            if doctor_info:
+
+                department = doctor_info.get(
+                    "department"
+                ) or "Department Not Assigned"
+
+            else:
+
+                department = "Department Not Assigned"
+
+        # -------------------------------------------------
+        # CREATE DEPARTMENT IF REQUIRED
+        # -------------------------------------------------
+
+        if department not in departments:
+
+            departments[department] = {
+                "department": department,
+                "doctor_count": 0,
+                "patient_count": 0,
+                "high_risk": 0,
+                "medium_risk": 0,
+                "low_risk": 0,
+                "readmitted_patients": 0,
+                "treatment_plans": 0,
+                "follow_ups": 0,
+                "doctors": [],
+            }
+
+        department_data = departments[department]
+
+        # -------------------------------------------------
+        # PATIENT COUNT
+        # -------------------------------------------------
+
+        department_data[
+            "patient_count"
+        ] += 1
+
+        # -------------------------------------------------
+        # RISK
+        # -------------------------------------------------
+
+        risk = str(
+            patient.get(
+                "risk",
+                "",
+            )
+        ).upper()
+
+        if risk == "HIGH":
+
+            department_data[
+                "high_risk"
+            ] += 1
+
+        elif risk == "MEDIUM":
+
+            department_data[
+                "medium_risk"
+            ] += 1
+
+        elif risk == "LOW":
+
+            department_data[
+                "low_risk"
+            ] += 1
+
+        # -------------------------------------------------
+        # READMISSION
+        # -------------------------------------------------
+
+        readmission_value = patient.get(
+            "readmitted",
+            patient.get(
+                "readmission",
+                None,
+            ),
+        )
+
+        if readmission_value is None:
+
+            binary_value = patient.get(
+                "readmission_30_days"
+            )
+
+            if binary_value == 1:
+
+                readmission_value = "<30"
+
+            elif binary_value == 0:
+
+                readmission_value = "NO"
+
+        if readmission_value is not None:
+
+            normalized_readmission = str(
+                readmission_value
+            ).strip().upper()
+
+            if normalized_readmission in {
+                "<30",
+                ">30",
+                "YES",
+                "READMITTED",
+                "TRUE",
+                "1",
+            }:
+
+                department_data[
+                    "readmitted_patients"
+                ] += 1
+
+        # -------------------------------------------------
+        # TREATMENT PLAN
+        # -------------------------------------------------
+
+        treatment = patient.get(
+            "treatment_plan",
+            {}
+        )
+
+        if treatment:
+
+            has_treatment_data = any(
+                treatment.get(field)
+                for field in [
+                    "diagnosis",
+                    "medicines",
+                    "doctor_recommendations",
+                ]
+            )
+
+            if has_treatment_data:
+
+                department_data[
+                    "treatment_plans"
+                ] += 1
+
+            if treatment.get(
+                "follow_up_date"
+            ):
+
+                department_data[
+                    "follow_ups"
+                ] += 1
+
+    # -----------------------------------------------------
+    # SORT DEPARTMENTS
+    # -----------------------------------------------------
+
+    department_list = sorted(
+        departments.values(),
+        key=lambda item: item[
+            "department"
+        ].lower(),
+    )
+
+    # -----------------------------------------------------
+    # SUMMARY
+    # -----------------------------------------------------
+
+    total_departments = len(
+        department_list
+    )
+
+    total_doctors = len(
+        doctors
+    )
+
+    total_patients = len(
+        patients
+    )
+
+    total_high_risk = sum(
+        item["high_risk"]
+        for item in department_list
+    )
+
+    total_medium_risk = sum(
+        item["medium_risk"]
+        for item in department_list
+    )
+
+    total_low_risk = sum(
+        item["low_risk"]
+        for item in department_list
+    )
+
+    total_readmitted = sum(
+        item["readmitted_patients"]
+        for item in department_list
+    )
+
+    # -----------------------------------------------------
+    # AUDIT LOG
+    # -----------------------------------------------------
+
+    create_audit_log(
+        current_user,
+        "DEPARTMENT_PERFORMANCE_VIEW",
+        details={
+            "departments": total_departments,
+            "doctors": total_doctors,
+            "patients": total_patients,
+        },
+    )
+
+    # -----------------------------------------------------
+    # RESPONSE
+    # -----------------------------------------------------
+
+    return {
+        "summary": {
+            "total_departments": total_departments,
+            "total_doctors": total_doctors,
+            "total_patients": total_patients,
+            "high_risk_patients": total_high_risk,
+            "medium_risk_patients": total_medium_risk,
+            "low_risk_patients": total_low_risk,
+            "readmitted_patients": total_readmitted,
+        },
+
+        "departments": department_list,
     }
 
 
@@ -380,40 +790,55 @@ def export_hospital_analytics(
                 "patient_id": str(
                     patient.get("_id")
                 ),
+
                 "patient_name": patient.get(
                     "name"
                 ),
+
                 "patient_age": patient.get(
                     "age"
                 ),
+
                 "disease": patient.get(
                     "disease"
                 ),
+
                 "risk": patient.get(
                     "risk"
                 ),
+
                 "status": patient.get(
                     "status"
                 ),
+
                 "diagnosis": treatment.get(
                     "diagnosis"
                 ),
+
                 "medicines": treatment.get(
                     "medicines"
                 ),
+
                 "doctor_recommendations": treatment.get(
                     "doctor_recommendations"
                 ),
+
                 "follow_up_date": treatment.get(
                     "follow_up_date"
                 ),
+
                 "doctor_name": treatment.get(
                     "doctor_name"
                 ),
+
                 "treatment_updated_at": (
-                    treatment.get("updated_at").isoformat()
+                    treatment.get(
+                        "updated_at"
+                    ).isoformat()
                     if isinstance(
-                        treatment.get("updated_at"),
+                        treatment.get(
+                            "updated_at"
+                        ),
                         datetime,
                     )
                     else treatment.get(
@@ -453,7 +878,9 @@ def hospital_patient_details(
 
     try:
 
-        patient_object_id = ObjectId(patient_id)
+        patient_object_id = ObjectId(
+            patient_id
+        )
 
     except Exception:
 
@@ -484,41 +911,57 @@ def hospital_patient_details(
         "patient_id": str(
             patient["_id"]
         ),
+
         "name": patient.get(
             "name"
         ),
+
         "age": patient.get(
             "age"
         ),
+
         "disease": patient.get(
             "disease"
         ),
+
         "risk": patient.get(
             "risk"
         ),
+
         "status": patient.get(
             "status"
         ),
+
         "treatment_plan": {
+
             "diagnosis": treatment.get(
                 "diagnosis"
             ),
+
             "medicines": treatment.get(
                 "medicines"
             ),
+
             "doctor_recommendations": treatment.get(
                 "doctor_recommendations"
             ),
+
             "follow_up_date": treatment.get(
                 "follow_up_date"
             ),
+
             "doctor_name": treatment.get(
                 "doctor_name"
             ),
+
             "updated_at": (
-                treatment.get("updated_at").isoformat()
+                treatment.get(
+                    "updated_at"
+                ).isoformat()
                 if isinstance(
-                    treatment.get("updated_at"),
+                    treatment.get(
+                        "updated_at"
+                    ),
                     datetime,
                 )
                 else treatment.get(
@@ -547,7 +990,9 @@ def download_patient_pdf(
 
     try:
 
-        patient_object_id = ObjectId(patient_id)
+        patient_object_id = ObjectId(
+            patient_id
+        )
 
     except Exception:
 
@@ -629,48 +1074,125 @@ def download_patient_pdf(
             "Patient ID",
             str(patient["_id"]),
         ],
+
         [
             "Name",
-            str(patient.get("name", "N/A")),
+            str(
+                patient.get(
+                    "name",
+                    "N/A",
+                )
+            ),
         ],
+
         [
             "Age",
-            str(patient.get("age", "N/A")),
+            str(
+                patient.get(
+                    "age",
+                    "N/A",
+                )
+            ),
         ],
+
         [
             "Disease",
-            str(patient.get("disease", "N/A")),
+            str(
+                patient.get(
+                    "disease",
+                    "N/A",
+                )
+            ),
         ],
+
         [
             "Risk Level",
-            str(patient.get("risk", "N/A")),
+            str(
+                patient.get(
+                    "risk",
+                    "N/A",
+                )
+            ),
         ],
+
         [
             "Status",
-            str(patient.get("status", "N/A")),
+            str(
+                patient.get(
+                    "status",
+                    "N/A",
+                )
+            ),
         ],
     ]
 
     patient_table = Table(
         patient_data,
-        colWidths=[150, 330],
+        colWidths=[
+            150,
+            330,
+        ],
     )
 
     patient_table.setStyle(
         TableStyle(
             [
-                ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
-                ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
-                ("LEFTPADDING", (0, 0), (-1, -1), 6),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 6),
-                ("TOPPADDING", (0, 0), (-1, -1), 6),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                (
+                    "GRID",
+                    (0, 0),
+                    (-1, -1),
+                    0.5,
+                    colors.grey,
+                ),
+
+                (
+                    "VALIGN",
+                    (0, 0),
+                    (-1, -1),
+                    "TOP",
+                ),
+
+                (
+                    "FONTNAME",
+                    (0, 0),
+                    (0, -1),
+                    "Helvetica-Bold",
+                ),
+
+                (
+                    "LEFTPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    6,
+                ),
+
+                (
+                    "RIGHTPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    6,
+                ),
+
+                (
+                    "TOPPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    6,
+                ),
+
+                (
+                    "BOTTOMPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    6,
+                ),
             ]
         )
     )
 
-    elements.append(patient_table)
+    elements.append(
+        patient_table
+    )
 
     elements.append(
         Spacer(1, 20)
@@ -697,6 +1219,7 @@ def download_patient_pdf(
                 )
             ),
         ],
+
         [
             "Medicines",
             str(
@@ -706,6 +1229,7 @@ def download_patient_pdf(
                 )
             ),
         ],
+
         [
             "Doctor Recommendations",
             str(
@@ -715,6 +1239,7 @@ def download_patient_pdf(
                 )
             ),
         ],
+
         [
             "Follow-up Date",
             str(
@@ -724,6 +1249,7 @@ def download_patient_pdf(
                 )
             ),
         ],
+
         [
             "Doctor",
             str(
@@ -737,24 +1263,71 @@ def download_patient_pdf(
 
     treatment_table = Table(
         treatment_data,
-        colWidths=[150, 330],
+        colWidths=[
+            150,
+            330,
+        ],
     )
 
     treatment_table.setStyle(
         TableStyle(
             [
-                ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
-                ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
-                ("LEFTPADDING", (0, 0), (-1, -1), 6),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 6),
-                ("TOPPADDING", (0, 0), (-1, -1), 6),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                (
+                    "GRID",
+                    (0, 0),
+                    (-1, -1),
+                    0.5,
+                    colors.grey,
+                ),
+
+                (
+                    "VALIGN",
+                    (0, 0),
+                    (-1, -1),
+                    "TOP",
+                ),
+
+                (
+                    "FONTNAME",
+                    (0, 0),
+                    (0, -1),
+                    "Helvetica-Bold",
+                ),
+
+                (
+                    "LEFTPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    6,
+                ),
+
+                (
+                    "RIGHTPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    6,
+                ),
+
+                (
+                    "TOPPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    6,
+                ),
+
+                (
+                    "BOTTOMPADDING",
+                    (0, 0),
+                    (-1, -1),
+                    6,
+                ),
             ]
         )
     )
 
-    elements.append(treatment_table)
+    elements.append(
+        treatment_table
+    )
 
     elements.append(
         Spacer(1, 20)
@@ -769,14 +1342,18 @@ def download_patient_pdf(
 
     elements.append(
         Paragraph(
-            datetime.now(timezone.utc).strftime(
+            datetime.now(
+                timezone.utc
+            ).strftime(
                 "Generated on: %Y-%m-%d %H:%M UTC"
             ),
             normal_style,
         )
     )
 
-    document.build(elements)
+    document.build(
+        elements
+    )
 
     buffer.seek(0)
 
