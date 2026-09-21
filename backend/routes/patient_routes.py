@@ -178,6 +178,120 @@ def get_patient(
 
 
 # =========================================================
+# UPDATE PATIENT
+# DOCTOR + SYSTEM ADMIN
+# =========================================================
+
+@router.patch("/api/patients/{patient_id}")
+def update_patient(
+    patient_id: str,
+    patient: Patient,
+    current_user: dict = Depends(
+        require_roles(
+            "Doctor",
+            "System Administrator",
+        )
+    ),
+):
+
+    # -----------------------------------------------------
+    # VALIDATE ID
+    # -----------------------------------------------------
+
+    try:
+
+        object_id = ObjectId(patient_id)
+
+    except Exception:
+
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid patient ID.",
+        )
+
+    # -----------------------------------------------------
+    # FIND PATIENT
+    # -----------------------------------------------------
+
+    existing_patient = patients_collection.find_one(
+        {
+            "_id": object_id
+        }
+    )
+
+    if not existing_patient:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Patient not found.",
+        )
+
+    # -----------------------------------------------------
+    # DOCTOR ACCESS CHECK
+    # -----------------------------------------------------
+
+    if current_user["role"] == "Doctor":
+
+        if (
+            existing_patient.get("doctor_id")
+            != current_user["id"]
+        ):
+
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    "You can only edit your assigned patients."
+                ),
+            )
+
+    # -----------------------------------------------------
+    # UPDATE DATA
+    # -----------------------------------------------------
+
+    update_data = patient.model_dump()
+
+    update_data["updated_at"] = datetime.now(
+        timezone.utc
+    )
+
+    patients_collection.update_one(
+        {
+            "_id": object_id
+        },
+        {
+            "$set": update_data
+        }
+    )
+
+    # -----------------------------------------------------
+    # GET UPDATED PATIENT
+    # -----------------------------------------------------
+
+    updated_patient = patients_collection.find_one(
+        {
+            "_id": object_id
+        }
+    )
+
+    # -----------------------------------------------------
+    # AUDIT LOG
+    # -----------------------------------------------------
+
+    create_audit_log(
+        current_user,
+        "UPDATE_PATIENT",
+        resource=patient_id,
+    )
+
+    return {
+        "message": "Patient updated successfully",
+        "patient": serialize_patient(
+            updated_patient
+        ),
+    }
+
+
+# =========================================================
 # DELETE PATIENT
 # SYSTEM ADMIN ONLY
 # =========================================================
@@ -192,6 +306,10 @@ def delete_patient(
     ),
 ):
 
+    # -----------------------------------------------------
+    # VALIDATE ID
+    # -----------------------------------------------------
+
     try:
 
         object_id = ObjectId(patient_id)
@@ -202,6 +320,10 @@ def delete_patient(
             status_code=400,
             detail="Invalid patient ID.",
         )
+
+    # -----------------------------------------------------
+    # DELETE PATIENT
+    # -----------------------------------------------------
 
     result = patients_collection.delete_one(
         {
@@ -215,6 +337,10 @@ def delete_patient(
             status_code=404,
             detail="Patient not found.",
         )
+
+    # -----------------------------------------------------
+    # AUDIT LOG
+    # -----------------------------------------------------
 
     create_audit_log(
         current_user,
