@@ -17,8 +17,7 @@ function PatientTable({ patients }) {
   const canDelete =
     userRole === "System Administrator";
 
-  // Display a short, clean patient ID.
-  // The real MongoDB ID is still used internally.
+  // Display a short, clean patient ID
   const getDisplayId = (patientId) => {
     if (!patientId) return "—";
 
@@ -33,22 +32,22 @@ function PatientTable({ patients }) {
       <table
         className="w-full border-collapse"
         style={{
-          minWidth: "1050px",
+          minWidth: "1150px",
           tableLayout: "fixed",
         }}
       >
 
         {/* COLUMN WIDTHS */}
         <colgroup>
-          <col style={{ width: "15%" }} />
-          <col style={{ width: "18%" }} />
-          <col style={{ width: "8%" }} />
-          <col style={{ width: "18%" }} />
-          <col style={{ width: "13%" }} />
           <col style={{ width: "14%" }} />
-          <col style={{ width: "14%" }} />
+          <col style={{ width: "17%" }} />
+          <col style={{ width: "7%" }} />
+          <col style={{ width: "9%" }} />
+          <col style={{ width: "17%" }} />
+          <col style={{ width: "12%" }} />
+          <col style={{ width: "12%" }} />
+          <col style={{ width: "12%" }} />
         </colgroup>
-
 
         {/* HEADER */}
         <thead>
@@ -64,6 +63,10 @@ function PatientTable({ patients }) {
 
             <th className="px-4 py-4 text-center font-bold">
               Age
+            </th>
+
+            <th className="px-4 py-4 text-center font-bold">
+              Gender
             </th>
 
             <th className="px-4 py-4 text-left font-bold">
@@ -85,19 +88,18 @@ function PatientTable({ patients }) {
           </tr>
         </thead>
 
-
         {/* BODY */}
         <tbody>
 
           {patients.map((patient, index) => {
 
-            // REAL backend ID
+            // REAL BACKEND ID
             const patientId =
               patient.id ||
               patient._id ||
               patient.patient_id;
 
-            // CLEAN UI ID
+            // CLEAN DISPLAY ID
             const displayId =
               getDisplayId(patientId);
 
@@ -122,7 +124,6 @@ function PatientTable({ patients }) {
                   {displayId}
                 </td>
 
-
                 {/* NAME */}
                 <td
                   className="px-4 py-4 align-middle text-gray-800 font-semibold truncate"
@@ -131,12 +132,15 @@ function PatientTable({ patients }) {
                   {patient.name || "—"}
                 </td>
 
-
                 {/* AGE */}
                 <td className="px-4 py-4 align-middle text-center text-gray-700">
                   {patient.age ?? "—"}
                 </td>
 
+                {/* GENDER */}
+                <td className="px-4 py-4 align-middle text-center text-gray-700">
+                  {patient.gender || "—"}
+                </td>
 
                 {/* DISEASE */}
                 <td
@@ -145,7 +149,6 @@ function PatientTable({ patients }) {
                 >
                   {patient.disease || "—"}
                 </td>
-
 
                 {/* RISK */}
                 <td className="px-4 py-4 align-middle text-center">
@@ -164,7 +167,6 @@ function PatientTable({ patients }) {
 
                 </td>
 
-
                 {/* STATUS */}
                 <td
                   className="px-4 py-4 align-middle text-center text-gray-700 truncate"
@@ -173,17 +175,12 @@ function PatientTable({ patients }) {
                   {patient.status || "—"}
                 </td>
 
-
                 {/* ACTIONS */}
                 <td className="px-4 py-4 align-middle">
 
                   <div className="flex justify-center items-center gap-4">
 
-                    {/* VIEW
-                        Doctor
-                        Hospital Administrator
-                        System Administrator
-                    */}
+                    {/* VIEW */}
                     {patientId && (
                       <Link
                         to={`/patients/${patientId}`}
@@ -194,11 +191,7 @@ function PatientTable({ patients }) {
                       </Link>
                     )}
 
-
-                    {/* EDIT
-                        Doctor
-                        System Administrator
-                    */}
+                    {/* EDIT */}
                     {canEdit && patientId && (
                       <button
                         type="button"
@@ -214,10 +207,7 @@ function PatientTable({ patients }) {
                       </button>
                     )}
 
-
-                    {/* DELETE
-                        System Administrator only
-                    */}
+                    {/* DELETE */}
                     {canDelete && patientId && (
                       <button
                         type="button"

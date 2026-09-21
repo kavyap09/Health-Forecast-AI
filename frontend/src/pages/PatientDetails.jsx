@@ -65,6 +65,10 @@ function PatientDetails() {
     }
   };
 
+  // =========================================================
+  // LOADING
+  // =========================================================
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -77,10 +81,15 @@ function PatientDetails() {
     );
   }
 
+  // =========================================================
+  // ERROR
+  // =========================================================
+
   if (error) {
     return (
       <DashboardLayout>
         <div className="bg-white rounded-xl shadow p-10 text-center">
+
           <h1 className="text-2xl font-bold text-red-600">
             Unable to Load Patient
           </h1>
@@ -96,10 +105,15 @@ function PatientDetails() {
             <FaArrowLeft />
             Back to Patients
           </Link>
+
         </div>
       </DashboardLayout>
     );
   }
+
+  // =========================================================
+  // PATIENT NOT FOUND
+  // =========================================================
 
   if (!patient) {
     return (
@@ -117,7 +131,9 @@ function PatientDetails() {
   return (
     <DashboardLayout>
 
-      {/* Header */}
+      {/* =====================================================
+          HEADER
+      ===================================================== */}
 
       <div className="flex justify-between items-center mb-8">
 
@@ -145,7 +161,9 @@ function PatientDetails() {
 
       </div>
 
-      {/* Profile Card */}
+      {/* =====================================================
+          PROFILE CARD
+      ===================================================== */}
 
       <div className="bg-white rounded-xl shadow p-8">
 
@@ -173,7 +191,9 @@ function PatientDetails() {
 
       </div>
 
-      {/* Basic Information */}
+      {/* =====================================================
+          BASIC INFORMATION
+      ===================================================== */}
 
       <div className="grid lg:grid-cols-2 gap-8 mt-8">
 
@@ -190,6 +210,13 @@ function PatientDetails() {
               {patient.age ?? "Not available"}
             </p>
 
+            {/* GENDER */}
+
+            <p>
+              <strong>Gender :</strong>{" "}
+              {patient.gender ?? "Not available"}
+            </p>
+
             <p>
               <strong>Disease :</strong>{" "}
               {patient.disease ?? "Not available"}
@@ -203,11 +230,6 @@ function PatientDetails() {
             <p>
               <strong>Risk Level :</strong>{" "}
               {patient.risk ?? "Not available"}
-            </p>
-
-            <p>
-              <strong>Gender :</strong>{" "}
-              {patient.gender ?? "Not available"}
             </p>
 
             <p>
@@ -231,7 +253,9 @@ function PatientDetails() {
 
         </div>
 
-        {/* Clinical Information */}
+        {/* =================================================
+            CLINICAL INFORMATION
+        ================================================= */}
 
         <div className="bg-white rounded-xl shadow p-6">
 
@@ -283,7 +307,9 @@ function PatientDetails() {
 
       </div>
 
-      {/* Medical History */}
+      {/* =====================================================
+          MEDICAL HISTORY
+      ===================================================== */}
 
       <div className="bg-white rounded-xl shadow p-6 mt-8">
 
@@ -314,7 +340,9 @@ function PatientDetails() {
 
       </div>
 
-      {/* AI Prediction */}
+      {/* =====================================================
+          AI PREDICTION
+      ===================================================== */}
 
       <div className="bg-white rounded-xl shadow p-6 mt-8">
 
@@ -330,6 +358,8 @@ function PatientDetails() {
 
         <div className="grid md:grid-cols-3 gap-6">
 
+          {/* READMISSION RISK */}
+
           <div className="bg-blue-50 rounded-xl p-5">
 
             <h3 className="font-bold">
@@ -337,6 +367,7 @@ function PatientDetails() {
             </h3>
 
             <p className="text-2xl font-bold mt-3">
+
               {patient.readmission_probability !==
               undefined
                 ? `${(
@@ -345,9 +376,12 @@ function PatientDetails() {
                   ).toFixed(1)}%`
                 : patient.risk ||
                   "Not available"}
+
             </p>
 
           </div>
+
+          {/* PREDICTION STATUS */}
 
           <div className="bg-yellow-50 rounded-xl p-5">
 
@@ -356,11 +390,15 @@ function PatientDetails() {
             </h3>
 
             <p className="text-2xl font-bold mt-3">
+
               {patient.prediction ??
                 "Not available"}
+
             </p>
 
           </div>
+
+          {/* RISK CATEGORY */}
 
           <div className="bg-green-50 rounded-xl p-5">
 
@@ -369,8 +407,10 @@ function PatientDetails() {
             </h3>
 
             <p className="text-2xl font-bold mt-3">
+
               {patient.risk ||
                 "Not available"}
+
             </p>
 
           </div>
@@ -379,7 +419,9 @@ function PatientDetails() {
 
       </div>
 
-      {/* Reports */}
+      {/* =====================================================
+          REPORTS
+      ===================================================== */}
 
       <div className="bg-white rounded-xl shadow p-6 mt-8">
 

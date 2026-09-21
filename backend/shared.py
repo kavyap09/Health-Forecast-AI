@@ -58,10 +58,10 @@ except Exception as e:
 class Patient(BaseModel):
     name: str
     age: int
+    gender: str
     disease: str
     risk: str
     status: str
-
 
 class ReadmissionInput(BaseModel):
     """
