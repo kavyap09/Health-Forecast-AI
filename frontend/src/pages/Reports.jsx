@@ -35,7 +35,7 @@ function Reports() {
       setError("");
 
       const response = await axios.get(
-        "http://127.0.0.1:8000/api/reports"
+        "https://health-forecast-ai-ljg7.vercel.app/api/reports"
       );
 
       setReports(response.data);
@@ -73,7 +73,7 @@ function Reports() {
     try {
 
       await axios.delete(
-        `http://127.0.0.1:8000/api/reports/${id}`
+        `https://health-forecast-ai-ljg7.vercel.app/api/reports/${id}`
       );
 
       setReports(

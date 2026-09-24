@@ -38,7 +38,7 @@ function Readmission() {
         }
 
         const response = await fetch(
-          "http://127.0.0.1:8000/api/analytics/hospital/readmission",
+          "https://health-forecast-ai-ljg7.vercel.app/api/analytics/hospital/readmission",
           {
             method: "GET",
             headers: {
@@ -173,7 +173,7 @@ function Readmission() {
       };
 
       const response = await fetch(
-        "http://127.0.0.1:8000/api/predict-readmission",
+        "https://health-forecast-ai-ljg7.vercel.app/api/predict-readmission",
         {
           method: "POST",
 

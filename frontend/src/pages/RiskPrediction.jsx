@@ -53,7 +53,7 @@ function RiskPrediction() {
       };
 
       const response = await fetch(
-        "http://127.0.0.1:8000/api/predict-risk",
+        "https://health-forecast-ai-ljg7.vercel.app/api/predict-risk",
         {
           method: "POST",
           headers: {
